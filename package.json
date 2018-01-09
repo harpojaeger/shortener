@@ -5,8 +5,14 @@
   "author": "Harpo Jaeger <harpo.jaeger@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "chai": "^4.1.2",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
-    "knex": "^0.14.2"
+    "knex": "^0.14.2",
+    "mocha": "^4.1.0",
+    "pg": "^7.4.1"
+  },
+  "scripts": {
+    "test": "mocha test"
   }
 }
