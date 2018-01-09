@@ -16,7 +16,53 @@ app.post('/create', (req, res) => {
     custom: Joi.string().alphanum().not('create')
   })
   if(Joi.validate(req.body, schema).error === null) {
-    // make the shortening request
+    if(req.body.custom) {
+      // Before proceeding, check if this custom shortlink is available
+      knex('links')
+      .count('short')
+      .where( { short: req.body.custom })
+      .then( (resp) => {
+        if(resp[0].count == 0) {
+          // create the shortlink
+          knex('links')
+          .returning('*')
+          .insert({
+            url: req.body.url,
+            short: req.body.custom,
+          })
+          .then( (resp) => {
+            res.status(200).send(resp[0])
+          })
+        } else {
+          // Not sure if 409 Conflict is the right response here, but I'm gonna go with it.
+          res.status(409).send({
+            response: 409,
+            message: 'The requested shortlink is already in use.'
+          })
+        }
+      })
+    } else {
+      // check if this URL is already in the database
+      knex('links')
+      .count('url')
+      .where( { url: req.body.url })
+      .then( resp => {
+        if(resp[0].count == 0) {
+          // create a new shortlink
+          knex('links')
+          .returning('*')
+          .insert({
+            url: req.body.url,
+          })
+          .then( (resp) => {
+            res.status(200).send(resp[0])
+          })
+        } else {
+          // return the existing shortlink
+          res.status(200).send(resp[0])
+        }
+      })
+    }
   } else {
     res.status(400).send({
       response: 400,
