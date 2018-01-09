@@ -74,8 +74,55 @@ app.get('/.*/stats', (req, res) => {
   // handle requests for stats on a link
 })
 
-app.get( (req, res) => {
-  // handle actual URL redirects
+app.get('/:slug', (req, res) => {
+  // Parse the requested shortlink to an integer. If it isn't one, search for the shortlink with id 0, which doesn't exist.
+  var idToSearch = parseInt(req.params.slug, 10)
+  if (!Number.isInteger(idToSearch)) idToSearch = 0
+
+  knex('links')
+  .select('*')
+  // Two possible ways of matching: custom shortlinks and IDs. The first will return a result if the slug is alphanumberic, the second if it's an ID.
+  .where({ short: req.params.slug })
+  .orWhere({ id: idToSearch })
+  .then( (resp) => {
+    if(resp.length==0) {
+      // No shortlink was found
+      res.sendStatus(404)
+      knex('requests')
+      returning('*')
+      .insert({
+        // Record the slug that was searched.
+        slug: req.params.slug,
+        // Record that a 404 was returned.
+        result: 404,
+        // No shortlink could be matched.
+        matched_id: null,
+        // A match was not successful via either method (alphanumeric slug or ID).
+        method: null,
+      })
+      .then( resp => {
+        console.log(resp)
+      })
+    } else {
+      knex('requests')
+      .returning('*')
+      .insert({
+        // Record the slug that was searched.
+        slug: req.params.slug,
+        // A 302 redirect was performed.
+        result: 302,
+        // Record the id of the shortlink that was matched.
+        matched_id: resp[0].id,
+        // Which method was used to match this link? Useful for debugging.
+        method: idToSearch == 0 ? 'slug_string' : 'numeric_id'
+      })
+      .then( resp => {
+        console.log(resp)
+      })
+      // Perform the redirect. I think 302 is the right one.
+      res.redirect(302, resp[0].url)
+    }
+  })
 })
 
 app.listen(port, () => {
