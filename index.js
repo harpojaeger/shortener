@@ -70,8 +70,36 @@ app.post('/create', (req, res) => {
   }
 })
 
-app.get('/.*/stats', (req, res) => {
-  // handle requests for stats on a link
+app.get('/:slug/stats', (req, res) => {
+  // First, we need to figure out which shortlink's stats are being requested.
+  var idToSearch = parseInt(req.params.slug, 10)
+  if(!Number.isInteger(idToSearch)) idToSearch = 0
+  knex('links')
+  .select('*')
+  .where({ short: req.params.slug })
+  .orWhere({ id: idToSearch })
+  .then( resp => {
+    if(resp.length==0) {
+      res.sendStatus(404)
+    } else {
+      // This is the canonical, numerical ID, which we can now use to search the 'requests' table.
+      const linkId = resp[0].id
+      var finalResponse = Object.assign({}, resp[0], {histogram: {}})
+      // Using knex.raw to allow advanced PostgreSQL date_trunc function
+      knex('requests')
+      .select(knex.raw("date_trunc('day', timestamp) as day, count(*)"))
+      .where({ matched_id: linkId })
+      .groupBy(1)
+      .then(histoData => {
+        histoData.forEach( (obj, i) => {
+          finalResponse.histogram[obj.day.toString()] = parseInt(obj.count, 10)
+        })
+        
+        res.send(finalResponse)
+      })
+    }
+  })
+
 })
 
 app.get('/:slug', (req, res) => {
