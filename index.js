@@ -43,10 +43,10 @@ app.post('/create', (req, res) => {
     } else {
       // check if this URL is already in the database
       knex('links')
-      .count('url')
+      .select('*')
       .where( { url: req.body.url })
       .then( resp => {
-        if(resp[0].count == 0) {
+        if(resp.length == 0) {
           // create a new shortlink
           knex('links')
           .returning('*')
