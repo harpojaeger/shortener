@@ -11,8 +11,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 
 app.post('/create', (req, res) => {
   const schema = Joi.object().keys({
-    // quick-and-dirty URL validation
-    url: Joi.string().regex(/https?:\/\/(www\.)?[a-z0-9\.]/i).required(),
+    url: Joi.string().uri().required(),
     custom: Joi.string().alphanum().not('create')
   })
   if(Joi.validate(req.body, schema).error === null) {
@@ -66,7 +65,7 @@ app.post('/create', (req, res) => {
   } else {
     res.status(400).send({
       response: 400,
-      message: "Your request must be an object with the properties url and custom. url is required and must be a url. Custom is optional, but may not have the value 'create'."
+      message: "Your request must be an object with the properties url and custom. url is required and must be a url. Custom is optional and may be any alphanumeric string except 'create'."
     })
   }
 })
