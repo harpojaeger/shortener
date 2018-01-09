@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.post('/create', (req, res) => {
   const schema = Joi.object().keys({
     url: Joi.string().uri().required(),
-    custom: Joi.string().alphanum().not('create')
+    custom: Joi.string().regex(/^[a-z]+$/i).not('create')
   })
   if(Joi.validate(req.body, schema).error === null) {
     if(req.body.custom) {
@@ -65,7 +65,7 @@ app.post('/create', (req, res) => {
   } else {
     res.status(400).send({
       response: 400,
-      message: "Your request must be an object with the properties url and custom. url is required and must be a url. Custom is optional and may be any alphanumeric string except 'create'."
+      message: "Your request must be an object with the properties url and custom. url is required and must be a url. Custom is optional and may be any alpha string except 'create'."
     })
   }
 })
