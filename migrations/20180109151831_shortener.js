@@ -10,9 +10,11 @@ exports.up = function(knex, Promise) {
   })
   .createTable('requests', table => {
     table.increments('id')
-    table.string('slug').notNullable()
+    table.string('short')
     table.timestamp('timestamp').defaultTo(knex.fn.now())
     table.string('result')
+    table.string('url')
+    table.string('method')
   })
   // we have to return a Promise after chaining, to make knex:migrate happy
   .then(() => {})
