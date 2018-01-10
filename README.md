@@ -9,3 +9,4 @@ A bitly-like URL shortener that runs locally.
 4. `knex migrate:latest` to initialize database
 5. `yarn test`
 5. `yarn start`
+6. Visit `localhost:5000/important` to test redirection
