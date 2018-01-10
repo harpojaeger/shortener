@@ -80,21 +80,20 @@ app.get('/:slug/stats', (req, res) => {
   .orWhere({ id: idToSearch })
   .then( resp => {
     if(resp.length==0) {
+      // This shortlink doesn't exist, so neither does its stats page.
       res.sendStatus(404)
     } else {
-      // This is the canonical, numerical ID, which we can now use to search the 'requests' table.
+      // This is the canonical, numerical shortlink ID, which we can now use to search the 'requests' table.
       const linkId = resp[0].id
-      var finalResponse = Object.assign({}, resp[0], {histogram: {}})
+
       // Using knex.raw to allow advanced PostgreSQL date_trunc function
       knex('requests')
       .select(knex.raw("date_trunc('day', timestamp) as day, count(*)"))
       .where({ matched_id: linkId })
       .groupBy(1)
       .then(histoData => {
-        histoData.forEach( (obj, i) => {
-          finalResponse.histogram[obj.day.toString()] = parseInt(obj.count, 10)
-        })
-        
+        // Create a new object representing the stats on this shortlink.
+        const finalResponse = Object.assign({}, resp[0], {histogram: histoData})
         res.send(finalResponse)
       })
     }
