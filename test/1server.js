@@ -41,7 +41,17 @@ describe('The HTTP server', () => {
     .expect(200)
     .then( response => {
       expect(response.body).to.be.an('object')
+      expect(response.body).to.have.property('id')
+      expect(response.body.id).to.equal(3)
+      expect(response.body).to.have.property('histogram')
+      expect(response.body.histogram).to.be.an('array')
+      expect(response.body.histogram[0]).to.have.property('day')
+      expect(response.body.histogram[0]).to.have.property('count')
+      expect(response.body.histogram[0].count).to.equal('30')
       done()
+    })
+    .catch( (err) => {
+      done(err)
     })
   })
 })
