@@ -1,7 +1,6 @@
 
 exports.up = function(knex, Promise) {
-  return knex.schema.dropTable('links')
-  .dropTable('requests')
+  return knex.schema
   .createTable('links', table => {
     table.increments('id')
     table.string('url').notNullable()
