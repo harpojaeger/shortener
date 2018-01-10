@@ -134,6 +134,7 @@ app.get('/:slug', (req, res) => {
         // A match was not successful via either method (alphanumeric slug or ID).
         method: null,
       })
+      .catch( err => console.log(err) )
       res.sendStatus(404)
     } else {
       knex('requests')
@@ -148,6 +149,7 @@ app.get('/:slug', (req, res) => {
         // Which method was used to match this link? Useful for debugging.
         method: idToSearch == 0 ? 'slug_string' : 'numeric_id'
       })
+      .catch( err => console.log(err) )
       // Perform the redirect. I think 302 is the right one.
       res.redirect(302, resp[0].url)
     }
