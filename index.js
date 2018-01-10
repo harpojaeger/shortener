@@ -114,9 +114,8 @@ app.get('/:slug', (req, res) => {
   .then( (resp) => {
     if(resp.length==0) {
       // No shortlink was found
-      res.sendStatus(404)
       knex('requests')
-      returning('*')
+      .returning('*')
       .insert({
         // Record the slug that was searched.
         slug: req.params.slug,
@@ -129,6 +128,7 @@ app.get('/:slug', (req, res) => {
       })
       .then( resp => {
         console.log(resp)
+        res.sendStatus(404)
       })
     } else {
       knex('requests')
