@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 require('dotenv').config()
+// Default to port 5000, but let user set their own if they want.
 const port = process.env.PORT || 5000
 const knex = require('knex')(require('./knexfile').development)
 const Joi = require('joi')
@@ -10,11 +11,14 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
 app.post('/create', (req, res) => {
+  // Validate the submitted JSON against the schema
   const schema = Joi.object().keys({
     url: Joi.string().uri().required(),
+    // Only alpha characters
     custom: Joi.string().regex(/^[a-z]+$/i).not('create')
   })
   if(Joi.validate(req.body, schema).error === null) {
+    // Handle requests that include a desired custom shortlink
     if(req.body.custom) {
       // Before proceeding, check if this custom shortlink is available
       knex('links')
@@ -40,8 +44,9 @@ app.post('/create', (req, res) => {
           })
         }
       })
+    // Handle requests without a custom shortlink
     } else {
-      // check if this URL is already in the database
+      // check if this URL has already been shortened
       knex('links')
       .select('*')
       .where( { url: req.body.url })
@@ -49,11 +54,13 @@ app.post('/create', (req, res) => {
         if(resp.length == 0) {
           // create a new shortlink
           knex('links')
+          // Return the info on the new shortlink that's created
           .returning('*')
           .insert({
             url: req.body.url,
           })
           .then( (resp) => {
+            // Send the new shortlink back to the user
             res.status(200).send(resp[0])
           })
         } else {
@@ -63,6 +70,7 @@ app.post('/create', (req, res) => {
       })
     }
   } else {
+    // Handle malformed requests
     res.status(400).send({
       response: 400,
       message: "Your request must be an object with the properties url and custom. url is required and must be a url. Custom is optional and may be any alpha string except 'create'."
@@ -71,7 +79,7 @@ app.post('/create', (req, res) => {
 })
 
 app.get('/:slug/stats', (req, res) => {
-  // First, we need to figure out which shortlink's stats are being requested.
+  // First, we need to figure out which shortlink's stats are being requested. Same trick as below.
   var idToSearch = parseInt(req.params.slug, 10)
   if(!Number.isInteger(idToSearch)) idToSearch = 0
   knex('links')
@@ -92,7 +100,7 @@ app.get('/:slug/stats', (req, res) => {
       .where({ matched_id: linkId })
       .groupBy(1)
       .then(histoData => {
-        // Create a new object representing the stats on this shortlink.
+        // Object representing the stats on this shortlink.
         const finalResponse = Object.assign({}, resp[0], {histogram: histoData})
         res.send(finalResponse)
       })
@@ -113,7 +121,7 @@ app.get('/:slug', (req, res) => {
   .orWhere({ id: idToSearch })
   .then( (resp) => {
     if(resp.length==0) {
-      // No shortlink was found
+      // No shortlink was found; log the request.
       knex('requests')
       .returning('*')
       .insert({
