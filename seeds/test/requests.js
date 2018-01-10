@@ -2,7 +2,7 @@
 exports.seed = function(knex, Promise) {
   // Deletes ALL existing entries
   return knex('requests').del()
-    .then(function () {
+    .then( () => {
       // reset the id sequence
       return knex.raw('alter sequence requests_id_seq restart with 1')
       .then( () => {

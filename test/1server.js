@@ -7,11 +7,9 @@ const knex = require('knex')(require('../knexfile').development)
 describe('The HTTP server', () => {
 
   // Seed the DB before each test so we have some known data to work with
-  beforeEach(() => {
-    knex.migrate.latest()
-    .then( () => {
-      knex.seed.run()
-    })
+  beforeEach((done) => {
+    knex.seed.run()
+    .then( () => done() )
   })
 
   it('rejects a malformed request', done => {
@@ -36,5 +34,14 @@ describe('The HTTP server', () => {
     request(app)
     .get('/important')
     .expect(302, done)
+  })
+  it('returns the correct stats for a shortlink', done => {
+    request(app)
+    .get('/important/stats')
+    .expect(200)
+    .then( response => {
+      expect(response.body).to.be.an('object')
+      done()
+    })
   })
 })
